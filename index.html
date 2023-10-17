@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snake</title>
+    <meta href="" rel="icon" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        text-align: center;
+        display: block;
+      }
+
+      h2 {
+        font-family: "Permanent Marker", cursive;
+        font-size: 2rem;
+      }
+      button {
+        background-color: white;
+        color: black;
+        height: 3.5rem;
+        width: 8rem;
+        font-size: 1.75rem;
+        text-align: center;
+        font-family: "Permanent Marker", cursive;
+        cursor: pointer;
+        border-radius: 30px;
+      }
+      #scoreText {
+        display: flex;
+        justify-content: center;
+        font-family: "Permanent Marker", cursive;
+        font-size: 4.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>snake</h2>
+    <canvas
+      id="canvas"
+      height="300"
+      width="300"
+      style="background-color: black"
+    ></canvas>
+
+    <div id="scoreText">0</div>
+    <button id="button">reset</button>
+  </body>
+  <script>
+    let canvas = document.querySelector("#canvas");
+    let ctx = canvas.getContext("2d");
+    let scoreText = document.querySelector("#scoreText");
+    let button = document.querySelector("#button");
+    let gameWidth = canvas.width;
+    let gameHeigth = canvas.height;
+    let canvasBackground = "black";
+    let snakeColor = "white";
+    let snakeBorder = "black";
+    let foodColor = "red";
+    let unite = 15;
+    let running = false;
+    let xVelocity = unite;
+    let yVelocity = 0;
+    let foodX;
+    let foodY;
+    let score = 0;
+    let snake = [
+      { x: unite * 3, y: 150 },
+      { x: unite * 2, y: 150 },
+      { x: unite * 1, y: 150 },
+      { x: unite * 0, y: 150 },
+    ];
+
+    window.addEventListener("keydown", changeDirection);
+    button.addEventListener("click", resetGame);
+
+    gameStart();
+
+    function gameStart() {
+      running = true;
+      scoreText.textContent = score;
+      creatFood();
+      drawFood();
+      nextTick();
+    }
+    function nextTick() {
+      if (running) {
+        setTimeout(() => {
+          clearBoard();
+          drawFood();
+          moveSnake();
+          drawSnake();
+          checkGameOver();
+          nextTick();
+        }, 100);
+      } else {
+        displayGameOver();
+      }
+    }
+    function clearBoard() {
+      ctx.fillStyle = canvasBackground;
+      ctx.fillRect(0, 0, gameWidth, gameHeigth);
+    }
+    function creatFood() {
+      function randomFood() {
+        let randomNum = Math.floor(Math.random() * 20) * unite;
+        return randomNum;
+      }
+      foodX = randomFood();
+      foodY = randomFood();
+    }
+    function drawFood() {
+      ctx.fillStyle = foodColor;
+      ctx.fillRect(foodX, foodY, unite, unite);
+    }
+    function moveSnake() {
+      let head = { x: snake[0].x + xVelocity, y: snake[0].y + yVelocity };
+      snake.unshift(head);
+      if (snake[0].x == foodX && snake[0].y == foodY) {
+        score++;
+        scoreText.textContent = score;
+        creatFood();
+      } else {
+        snake.pop();
+      }
+    }
+    function drawSnake() {
+      ctx.fillStyle = snakeColor;
+      ctx.strokeStyle = snakeBorder;
+      snake.forEach((snakePart) => {
+        ctx.fillRect(snakePart.x, snakePart.y, unite, unite);
+        ctx.strokeRect(snakePart.x, snakePart.y, unite, unite);
+      });
+    }
+    function changeDirection(event) {
+      let keypressed = event.keyCode;
+      let LEFT = 37;
+      let UP = 38;
+      let RIGHT = 39;
+      let DOWN = 40;
+      let goingUP = yVelocity == -unite;
+      let goingDOWN = yVelocity == unite;
+      let goingLEFT = xVelocity == -unite;
+      let goingRIGHT = xVelocity == unite;
+
+      switch (true) {
+        case keypressed == LEFT && !goingRIGHT:
+          xVelocity = -unite;
+          yVelocity = 0;
+          break;
+        case keypressed == RIGHT && !goingLEFT:
+          xVelocity = unite;
+          yVelocity = 0;
+          break;
+        case keypressed == UP && !goingDOWN:
+          xVelocity = 0;
+          yVelocity = -unite;
+          break;
+        case keypressed == DOWN && !goingUP:
+          xVelocity = 0;
+          yVelocity = unite;
+          break;
+      }
+    }
+    function checkGameOver() {
+      if (
+        snake[0].x < 0 ||
+        snake[0].y < 0 ||
+        snake[0].x >= gameWidth ||
+        snake[0].y >= gameHeigth
+      ) {
+        running = false;
+      }
+
+      for (let i = 1; i < snake.length; i++) {
+        if (snake[i].x == snake[0].x && snake[i].y == snake[0].y) {
+          running = false;
+        }
+      }
+    }
+    function displayGameOver() {
+      ctx.font = "2rem MV Boli";
+      ctx.fillStyle = "white";
+      ctx.textAlign = "center";
+      ctx.fillText("GAME OVER!", gameWidth / 2, gameHeigth / 2);
+      running = false;
+    }
+    function resetGame() {
+      score = 0;
+      xVelocity = unite;
+      yVelocity = 0;
+      snake = [
+        { x: unite * 3, y: 150 },
+        { x: unite * 2, y: 150 },
+        { x: unite * 1, y: 150 },
+        { x: unite * 0, y: 150 },
+      ];
+      gameStart();
+    }
+  </script>
+</html>
